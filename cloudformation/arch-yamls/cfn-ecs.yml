@@ -1,0 +1,82 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  ClusterName:
+    Type: String
+  RepoName:
+    Type: String
+  JenkinsRole:
+    Type: String
+  ServiceRole:
+    Type: String
+  ConsoleRole:
+    Type: String
+  TagComponent:
+    Type: String
+Resources:
+  ECSCluster:
+    Type: AWS::ECS::Cluster
+    Properties: 
+      ClusterName:
+        !Ref ClusterName
+      Tags:
+      - Key:  Name
+        Value:  !Ref ClusterName
+      - Key:  component
+        Value:  !Ref TagComponent
+        
+        
+  ECRRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Ref RepoName
+      RepositoryPolicyText:
+        Version:  '2012-10-17'
+        Statement:
+          - Sid:  AllowPushPull
+            Effect: Allow
+            Principal:
+              AWS:  !Sub
+                - "arn:aws:iam::${AccountNumber}:role/${Role}"
+                - AccountNumber:  !Ref AWS::AccountId
+                  Role: !Ref JenkinsRole
+              Action:
+                - "ecr:ListImages"
+                - "ecr:GetDownloadUrlForLayer"
+                - "ecr:BatchGetImage"
+                - "ecr:BatchCheckLayerAvailability"
+                - "ecr:PutImage"
+                - "ecr:InitiateLayerUpload"
+                - "ecr:UploadLayerPart"
+                - "ecr:CompleteLayerUpload"
+                - "ecr:BatchDeleteImage"
+          - Sid: AllowPull
+            Effect: Allow
+            Principal:
+              AWS:  !Sub
+                - "arn:aws:iam::${AccountNumber}:role/${Role}"
+                - AccountNumber:  !Ref AWS::AccountId
+                  Role: !Ref ServiceRole
+              Action:
+                - "ecr:GetDownloadUrlForLayer"
+                - "ecr:BatchGetImage"
+                - "ecr:BatchCheckLayerAvailability"
+          - Sid: AllowHumanReadAccess
+            Effect: Allow
+            Principal:  
+              AWS:  !Sub
+                - "arn:aws:iam::${AccountNumber}:role/${Role}"
+                - AccountNumber:  !Ref AWS::AccountId
+                  Role: !Ref ConsoleRole
+              Action:
+                - "ecr:BatchCheckLayerAvailability"
+                - "ecr:GetDownloadUrlForLayer"
+                - "ecr:GetRepositoryPolicy"
+                - "ecr:DescribeRepositories"
+                - "ecr:ListImages"
+                - "ecr:DescribeImages"
+                - "ecr:BatchGetImage"
+      Tags:
+        - Key:  Name
+          Value:  !Ref RepoName
+        - Key:  component
+          Value:  !Ref TagComponent
