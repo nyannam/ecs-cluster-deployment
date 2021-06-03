@@ -1,7 +1,7 @@
 # ecs-cluster-deployment
 This Repository manages the ECS Cluster and ECR repository used by the cluster
 
-#Resources
+# Resources
  - ECS Cluster
  - ECR Repositories
  
